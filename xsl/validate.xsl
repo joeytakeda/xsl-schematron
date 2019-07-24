@@ -17,7 +17,7 @@
     <xsl:param name="out" as="xs:string?"/>
     <xsl:param name="failOnError" select="'no'" static="yes" as="xs:string?"/>
     <xsl:param name="verbose" as="xs:string?"/>
-    <xsl:param name="pattern">*.*</xsl:param>
+    <xsl:param name="pattern">*.xml</xsl:param>
     <xsl:param name="recurse">yes</xsl:param>
     
     
@@ -32,7 +32,7 @@
     
     <xsl:variable name="useVerbose" select="if ($verbose=('True','true','yes','y','verbose','0')) then true() else false()"/>
     
-    <xsl:variable name="docs" select="if (not(jt:noVal($dir))) then collection($dir || '?select=' || $pattern || ';recurse=' || $recurse) else doc($file)" as="document-node()*"/>
+    <xsl:variable name="docs" select="if (not(jt:noVal($dir))) then collection($dir || '?select=' || $pattern || ';recurse=' || $recurse || ';on-error=ignore') else doc($file)" as="document-node()*"/>
     
     <xsl:variable name="schemaXsl">
         <xsl:call-template name="makeSchemaXsl"/>
@@ -81,6 +81,7 @@
             <xsl:for-each select="$docs">
                 <xsl:variable name="currDoc" select="."/>
                 <xsl:variable name="uri" select="document-uri($currDoc)"/>
+                <xsl:message>Validating <xsl:value-of select="$uri"/></xsl:message>
                 <xsl:variable name="result" select="transform(map{'stylesheet-node': $schemaXsl, 'source-node': $currDoc})?output"/>
                 <xsl:variable name="failed-asserts" select="$result//svrl:failed-assert" as="element(svrl:failed-assert)*"/>
                 <xsl:variable name="successful-reports" select="$result//svrl:successful-report" as="element(svrl:successful-report)*"/>
