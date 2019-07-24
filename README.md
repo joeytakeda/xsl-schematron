@@ -23,6 +23,21 @@ You must provide, as a paramater to the stylesheet, **one of**:
 * sch: The schematron file
 * xsl: An XSLT filed derived using Rick Jeliffe's stylesheets for SCH --> XSLT --> SVRL.
 
+### Example
+
+To validate the documents in the test directory against the provided schematron:
+
+```
+cd xsl/
+saxon -xsl:validate.xsl -s:validate.xsl dir=../test/data/ sch=../test/schema/sch
+```
+
+You can also use external URIs. Below validates the data directory contents against the embedded schematron in the TEI P5 RelaxNG schema:
+
+```
+saxon -xsl:validate.xsl -s:validate.xsl dir=../test/data/ rng=https://tei-c.org/release/xml/tei/custom/schema/relaxng/tei_all.rng
+```
+
 
 ## How it Works
 
