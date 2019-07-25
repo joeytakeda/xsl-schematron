@@ -12,7 +12,7 @@ Using your favourite XSLT 3.0 processor (like Saxon 9.8HE), you can run the XSLT
 saxon -xsl:validate.xsl -s:validate.xsl
 ```
 
-You must provide, as a paramater to the stylesheet, **one of**:
+You must provide, as a parameter to the stylesheet, **one of**:
 
 * file: The source file to validate
 * dir: A directory containing files to validate
