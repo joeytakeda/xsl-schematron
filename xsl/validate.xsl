@@ -3,20 +3,145 @@
     xmlns:xs="http://www.w3.org/2001/XMLSchema"
     xmlns:map="http://www.w3.org/2005/xpath-functions/map"
     exclude-result-prefixes="#all"
+    xmlns:xd="http://www.oxygenxml.com/ns/doc/xsl"
     xmlns:sch="http://purl.oclc.org/dsdl/schematron"
     xmlns:rng="http://relaxng.org/ns/structure/1.0"
     xmlns:svrl="http://purl.oclc.org/dsdl/svrl"
     xmlns:jt="https://github.com/joeytakeda/xsl-schematron"
     version="3.0">
+    <xd:doc scope="stylesheet">
+        <xd:desc>
+            <xd:p><xd:b>Created on:</xd:b> 2019-10-26</xd:p>
+            <xd:p><xd:b>Author:</xd:b> jtakeda</xd:p>
+            <xd:p>Created by Joey Takeda (https://github.io/joeytakeda/). It is free for any purpose,
+                but acknowledgement is very much appreciated.</xd:p>
+            <xd:p>This tranformation validates
+                a source collection against either an RelaxNG, Schematron, or schematron compiled into XSLT.
+                It relies on a collection of schematron conversion files created by James Clark.</xd:p>
+            <xd:p>It MUST be run using Saxon 9.8 or later.</xd:p>
+            <xd:p>The way it works is thus:</xd:p>
+            <xd:ul>
+                <xd:li>
+                    <xd:b>Step 1:</xd:b>
+                    <xd:ul>
+                        <xd:li>If the file is a RelaxNG file, it converts the RelaxNG file into a Schematron file, which is then converted into an XSLT.</xd:li>
+                        <xd:li>If the file is a Schematron file, it converts it into an XSLT.</xd:li>
+                        <xd:li>If the file is an XSLT already, then it just leaves it.</xd:li>
+                    </xd:ul>
+                </xd:li>
+                <xd:li>
+                    <xd:b>Step 2:</xd:b>
+                    <xd:ul>
+                        <xd:li>Iterating over the document collection, passed as a parameter, the makeErrorsMap template 
+                            uses the XSLT 3.0 function transform() to transform the source node using the compiled XSLT
+                            from Step 1.</xd:li>
+                        <xd:li>If there is a svrl:failed-assert in the result of the transform, it adds an entry to a xsl:map with the
+                        document-uri as the key and the contents of the failed assert as the value.</xd:li>
+                    </xd:ul>
+                </xd:li>
+                <xd:li>
+                    <xd:b>Step 3:</xd:b>
+                    <xd:ul>
+                        <xd:li>The validate template takes the result of the map and if the map has any entries
+                        (i.e. has a size greater than 0), then it iterates over the map entries and provides validation
+                        error messages, terminating if specified.</xd:li>
+                    </xd:ul>
+                </xd:li>
+              
+            </xd:ul>
+        </xd:desc>
+        <xd:param name="rng">
+            <xd:ul>
+                <xd:li>Description:The path to a RelaxNG schema with embedded schematron.</xd:li>
+                <xd:li>Default value: empty</xd:li>
+                <xd:li>Legal value: anyURI</xd:li>
+                <xd:li>Note: Cannot be combined with the <xd:ref name="sch" type="parameter">sch</xd:ref>
+                or <xd:ref name="xsl" type="parameter">xsl</xd:ref> parameters.</xd:li>
+            </xd:ul>
+        </xd:param>
+        <xd:param name="sch">
+            <xd:ul>
+                <xd:li>Description:The path to a schematron schema.</xd:li>
+                <xd:li>Default value: empty</xd:li>
+                <xd:li>Legal value: anyURI</xd:li>
+                <xd:li>Note: Cannot be combined with the <xd:ref name="rng" type="parameter">rng</xd:ref>
+                    or <xd:ref name="xsl" type="parameter">xsl</xd:ref> parameters.</xd:li>
+            </xd:ul>
+        </xd:param>
+        <xd:param name="xsl">
+            <xd:ul>
+                <xd:li>Description:The path to an schematron schema compiled into XSLT.</xd:li>
+                <xd:li>Default value: empty</xd:li>
+                <xd:li>Legal value: anyURI</xd:li>
+                <xd:li>Note: Cannot be combined with the <xd:ref name="rng" type="parameter">rng</xd:ref>
+                    or <xd:ref name="sch" type="parameter">sch</xd:ref> parameters.</xd:li>
+            </xd:ul>
+        </xd:param>
+        <xd:param name="file">
+            <xd:ul>
+                <xd:li>Description: The path to the file to validate.</xd:li>
+                <xd:li>Default value: empty</xd:li>
+                <xd:li>Legal value: anyURI</xd:li>
+                <xd:li>Note: Cannot be combined with the <xd:ref name="dir" type="parameter">dir</xd:ref>
+                    parameter.</xd:li>
+            </xd:ul>
+        </xd:param>
+        <xd:param name="dir">
+            <xd:ul>
+                <xd:li>Description: The path to the directory to validate.</xd:li>
+                <xd:li>Default value: empty</xd:li>
+                <xd:li>Legal value: anyURI</xd:li>
+                <xd:li>Note: Cannot be combined with the <xd:ref name="file" type="parameter">file</xd:ref>
+                    parameter.</xd:li>
+            </xd:ul>
+        </xd:param>
+        <xd:param name="failOnError">
+            <xd:ul>
+                <xd:li>Description: Whether or not the process should terminate on error.</xd:li>
+                <xd:li>Default value: "yes"</xd:li>
+                <xd:li>Legal values: "yes" or "no".</xd:li>
+                <xd:li>Note: The name "failOnError" stems from the standard attribute name for the Ant java task.
+                    This is also compiled as a static parameter, using XSLT 3.0 shadow attributes.</xd:li>
+            </xd:ul>
+        </xd:param>
+            <xd:param name="verbose">
+                <xd:ul>
+                <xd:li>Description: Whether or not to produce verbose output (i.e. explaining every step of the process).</xd:li>
+                <xd:li>Default value: "no"</xd:li>
+                <xd:li>Legal values: string?.</xd:li>
+                <xd:li>Note: While this accepts any string, it will also be "true" (i.e. produce output) if the value is one of
+                    "true","yes","verbose", or 0.</xd:li>
+            </xd:ul>
+            </xd:param>
+        <xd:param name="pattern">
+            <xd:ul>
+                <xd:li>Description: The glob file pattern for selecting files from the directory.</xd:li>
+                <xd:li>Default value: *.xml</xd:li>
+                <xd:li>Legal values: Any glob file pattern.</xd:li>
+                <xd:li>Note: This parameter only has effect if combined with the <xd:ref name="dir" type="param">dir</xd:ref>
+                    param.</xd:li>
+            </xd:ul>
+        </xd:param>
+        <xd:param name="recurse">
+            <xd:ul>
+                <xd:li>Description: Whether or not to recurse in the directory.</xd:li>
+                <xd:li>Default value: yes</xd:li>
+                <xd:li>Legal values: "yes" or "no".</xd:li>
+                <xd:li>Note: This parameter only has effect if combined with the <xd:ref name="dir" type="param">dir</xd:ref>
+                    param.</xd:li>
+            </xd:ul>
+        </xd:param>
+    </xd:doc>
+    
+    
     
     <xsl:param name="rng" as="xs:string?"/>
     <xsl:param name="sch" as="xs:string?"/>
     <xsl:param name="xsl" as="xs:string?"/>
     <xsl:param name="file" as="xs:string?"/>
     <xsl:param name="dir" as="xs:string?"/>
-    <xsl:param name="out" as="xs:string?"/>
     <xsl:param name="failOnError" select="'no'" static="yes" as="xs:string?"/>
-    <xsl:param name="verbose" as="xs:string?"/>
+    <xsl:param name="verbose" select="'no'" as="xs:string"/>
     <xsl:param name="pattern">*.xml</xsl:param>
     <xsl:param name="recurse">yes</xsl:param>
     
@@ -37,7 +162,7 @@
     <xsl:variable name="schemaXsl">
         <xsl:call-template name="makeSchemaXsl"/>
     </xsl:variable>
- 
+    
     <xsl:template match="/">
         <xsl:call-template name="echoParams"/>
         <xsl:call-template name="checkParams"/>
@@ -46,7 +171,7 @@
     
     
     <xsl:template name="validate">
-
+        
         <xsl:variable name="errors" as="map(xs:anyURI, element()+)">
             <xsl:call-template name="makeErrorsMap"/>
         </xsl:variable>
@@ -153,18 +278,17 @@
         <xsl:copy-of select="transform(map{'stylesheet-location': $stylesheet-location, 'source-node': $source-node})"/>
     </xsl:function>
     
-
     
-
-
-  
+    
+    
+    
+    
     <xsl:template name="echoParams">
         <xsl:if test="$useVerbose"><xsl:message>$rng: <xsl:value-of select="$rng"/></xsl:message></xsl:if>
         <xsl:if test="$useVerbose"><xsl:message>$sch: <xsl:value-of select="$sch"/></xsl:message></xsl:if>
         <xsl:if test="$useVerbose"><xsl:message>$xsl: <xsl:value-of select="$xsl"/></xsl:message></xsl:if>
         <xsl:if test="$useVerbose"><xsl:message>$file: <xsl:value-of select="$file"/></xsl:message></xsl:if>
         <xsl:if test="$useVerbose"><xsl:message>$dir: <xsl:value-of select="$dir"/></xsl:message></xsl:if>
-        <xsl:if test="$useVerbose"><xsl:message>$out: <xsl:value-of select="$out"/></xsl:message></xsl:if>
         <xsl:if test="$useVerbose"><xsl:message>$verbose: <xsl:value-of select="$verbose"/></xsl:message></xsl:if>
         <xsl:if test="$useVerbose"><xsl:message>$resolvedFile: <xsl:value-of select="$resolvedFile"/></xsl:message></xsl:if>
     </xsl:template>
@@ -193,7 +317,7 @@
     
     <xsl:function name="jt:noVal" as="xs:boolean">
         <xsl:param name="string" as="xs:string?"/>
-        <xsl:value-of select="string-length(normalize-space($string)) = 0"/>
+        <xsl:sequence select="string-length(normalize-space($string)) = 0"/>
     </xsl:function>
     
     
