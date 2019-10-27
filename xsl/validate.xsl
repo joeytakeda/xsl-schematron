@@ -15,8 +15,9 @@
             <xd:p><xd:b>Author:</xd:b> jtakeda</xd:p>
             <xd:p>Created by Joey Takeda (https://github.io/joeytakeda/). It is free for any purpose,
                 but acknowledgement is very much appreciated.</xd:p>
-            <xd:p>This tranformation validates
-                a source collection against either an RelaxNG, Schematron, or schematron compiled into XSLT.
+            <xd:p>This code provides a validator for Schematron, which can be in the form of either an RelaxNG with embedded schematron
+                , Schematron, or schematron compiled into XSLT. Note that this code does NOT validate source XML files against the RelaxNG
+                contstraints of an RNG schema; it only validates against the embedded schematron.
                 It relies on a collection of schematron conversion files created by James Clark.</xd:p>
             <xd:p>It MUST be run using Saxon 9.8 or later.</xd:p>
             <xd:p>The way it works is thus:</xd:p>
