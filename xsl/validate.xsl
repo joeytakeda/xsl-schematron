@@ -158,7 +158,7 @@
     
     <xsl:variable name="useVerbose" select="if ($verbose=('True','true','yes','y','verbose','0')) then true() else false()"/>
     
-    <xsl:variable name="docs" select="if (not(jt:noVal($dir))) then uri-collection($dir || '?select=' || $pattern || ';recurse=' || $recurse || ';on-error=ignore') else resolve-uri($file)" as="xs:anyURI*"/>
+    <xsl:variable name="docs" select="if (not(jt:noVal($dir))) then uri-collection(resolve-uri($dir, document-uri(/)) || '?select=' || $pattern || ';recurse=' || $recurse || ';on-error=ignore') else resolve-uri($file)" as="xs:anyURI*"/>
     
     <xsl:variable name="schemaXsl">
         <xsl:call-template name="makeSchemaXsl"/>
@@ -176,7 +176,7 @@
         <xsl:result-document href="schematron-out.xsl" method="xml">
             <xsl:copy-of select="$schemaXsl"/>
         </xsl:result-document>
-        <xsl:variable name="errors" as="map(xs:anyURI, element()+)">
+        <xsl:variable name="errors" as="map(xs:anyURI, xs:string*)">
             <xsl:call-template name="makeErrorsMap"/>
         </xsl:variable>
     
@@ -191,7 +191,7 @@
                     <xsl:variable name="entry" select="$errors($key)"/>
                     <xsl:message><xsl:value-of select="$key"/>:</xsl:message>
                     <xsl:for-each select="$entry">
-                        <xsl:message><xsl:text>&#x9;</xsl:text><xsl:text>* </xsl:text><xsl:value-of select="normalize-space(svrl:text)"/></xsl:message>
+                        <xsl:message><xsl:text>&#x9;</xsl:text><xsl:text>* </xsl:text><xsl:value-of select="."/></xsl:message>
                     </xsl:for-each>
                     <xsl:message><xsl:text>&#xA;</xsl:text></xsl:message>
                 </xsl:for-each>
@@ -215,10 +215,11 @@
                 <xsl:if test="$useVerbose">
                     <xsl:message>Validating <xsl:value-of select="$uri"/></xsl:message>
                 </xsl:if>
-                <xsl:variable name="result" select="transform(map{'stylesheet-node': $schemaXsl, 'source-node': $currDoc})?output"/>
-                <xsl:variable name="failed-asserts" select="$result//svrl:failed-assert" as="element(svrl:failed-assert)*"/>
-                <xsl:variable name="successful-reports" select="$result//svrl:successful-report" as="element(svrl:successful-report)*"/>
-                <xsl:variable name="errors" select="($failed-asserts,$successful-reports)" as="element()*"/>
+                <xsl:variable name="errors" as="xs:string*">
+                    <xsl:sequence>
+                        <xsl:apply-templates select="transform(map{'stylesheet-node': $schemaXsl, 'source-node': $currDoc})?output/descendant::svrl:text" mode="errors"/>
+                    </xsl:sequence>
+                </xsl:variable>
                 <xsl:if test="not(empty($errors))">
                     <xsl:map-entry key="$uri" select="$errors"/>
                 </xsl:if>
@@ -226,6 +227,11 @@
         </xsl:map>
     </xsl:template>
     
+    <xsl:mode name="errors" on-no-match="shallow-skip"/>
+   
+    <xsl:template match="svrl:failed-assert/svrl:text  | svrl:successful-report/svrl:text" mode="errors">
+        <xsl:value-of select="normalize-space(.)"/>
+    </xsl:template>
     
     <xsl:template name="makeSchemaXsl">
         <xsl:if test="$useVerbose">
@@ -270,17 +276,8 @@
             </xsl:if>
             <xsl:copy-of select="jt:transform($iso.abstract.expand, $first)?output"/>
         </xsl:variable>
-        <xsl:variable name="third">
-            <xsl:if test="$useVerbose">
-                <xsl:message>Expanding using <xsl:value-of select="resolve-uri($iso.svrl)"/></xsl:message>
-            </xsl:if>
-            <xsl:copy-of select="jt:transform($iso.svrl, $second)?output"/>
-        </xsl:variable>
         
-        <xsl:variable name="fourth">
-            <xsl:copy-of select="jt:transform('conditionalize.xsl', $third)?output"/>
-        </xsl:variable>
-        <xsl:copy-of select="$fourth"/>
+        <xsl:copy-of select="jt:transform($iso.svrl, $second)?output"/>
     </xsl:function>
     
     
