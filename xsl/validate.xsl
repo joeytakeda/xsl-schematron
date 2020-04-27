@@ -217,7 +217,7 @@
                 </xsl:if>
                 <xsl:variable name="errors" as="xs:string*">
                     <xsl:sequence>
-                        <xsl:apply-templates select="transform(map{'stylesheet-node': $schemaXsl, 'source-node': $currDoc})?output/descendant::svrl:text" mode="errors"/>
+                        <xsl:apply-templates select="transform(map{'stylesheet-node': $schemaXsl, 'source-node': $currDoc, 'stylesheet-base-uri': $uri})?output/descendant::svrl:text" mode="errors"/>
                     </xsl:sequence>
                 </xsl:variable>
                 <xsl:if test="not(empty($errors))">
