@@ -66,6 +66,7 @@ xmlns:sch="http://purl.oclc.org/dsdl/schematron" xmlns:rng="http://relaxng.org/n
 			</xsl:for-each>
 			<xsl:copy-of select="$schemas//sch:phase"/>
 			<xsl:copy-of select="$schemas//sch:pattern"/>
+			<xsl:copy-of select="$schemas//xsl:*"/>
 			<sch:diagnostics>
 				<xsl:copy-of select="$schemas//sch:diagnostics/*"/>
 			</sch:diagnostics>

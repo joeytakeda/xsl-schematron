@@ -245,19 +245,47 @@
                 </xsl:if>
                 <xsl:copy-of select="jt:transform($extract.rng, doc($rng))?output => jt:schematronToXsl()"/>
             </xsl:when>
+            <xsl:otherwise>
+                <xsl:message terminate="yes">COULD NOT FIND DOCUMENT</xsl:message>
+            </xsl:otherwise>
         </xsl:choose>
     </xsl:function>
     
     <xsl:function name="jt:schematronToXsl" new-each-time="no">
         <xsl:param name="sch"/>
-        <xsl:variable name="first" select="if ($sch//*[self::*:include | self::*:extends]) then jt:transform($iso.dsdl.include,$sch)?output else $sch"/>
+        <xsl:variable name="first">
+            <xsl:choose>
+                <xsl:when test="$sch//*[self::*:include | self::*:extends]">
+                    <xsl:if test="$useVerbose">
+                        <xsl:message>1. Transforming using <xsl:value-of select="$iso.dsdl.include"/></xsl:message>
+                    </xsl:if>
+                    <xsl:sequence select="jt:transform($iso.dsdl.include,$sch)?output"/>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:sequence select="$sch"/>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:variable>
         
-        <xsl:variable name="second" 
-            select="if ($sch//*[self::*:pattern]) 
-                    then jt:transform($iso.abstract.expand, $first)?output 
-                    else $first"/>
-        
-        <xsl:copy-of select="jt:transform($iso.svrl, $second)?output"/>
+        <xsl:variable name="second">
+            <xsl:choose>
+                <xsl:when test="$sch//*[self::*:pattern]">
+                    <xsl:message>2. Transforming using <xsl:value-of select="$iso.abstract.expand"/></xsl:message>
+                    <xsl:sequence select="jt:transform($iso.abstract.expand, $first)?output"/>
+                </xsl:when>
+                <xsl:otherwise>
+                    <xsl:sequence select="$first"/>
+                </xsl:otherwise>
+            </xsl:choose>
+        </xsl:variable>
+
+        <xsl:sequence>
+            <xsl:if test="$useVerbose">
+                <xsl:message>3. Transform using <xsl:value-of select="$iso.svrl"/></xsl:message>
+            </xsl:if>
+            <xsl:copy-of select="jt:transform($iso.svrl, $second)?output"/>
+        </xsl:sequence>
+      
     </xsl:function>
     
     

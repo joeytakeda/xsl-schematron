@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TEI xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:svg="http://www.w3.org/2000/svg"
+  xmlns:math="http://www.w3.org/1998/Math/MathML"
+  xmlns:sch="http://purl.oclc.org/dsdl/schematron"
+  xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+  xmlns="http://www.tei-c.org/ns/1.0">
+  <teiHeader>
+    <fileDesc>
+      <titleStmt>
+        <title>Title</title>
+      </titleStmt>
+      <publicationStmt>
+        <p>Publication Information</p>
+      </publicationStmt>
+      <sourceDesc>
+        <p>Information about the source</p>
+      </sourceDesc>
+    </fileDesc>
+  </teiHeader>
+  <text>
+    <body>
+      <schemaSpec ident="oddex1" start="TEI">
+        <moduleRef key="header"/>
+        <moduleRef key="core"/>
+        <moduleRef key="tei"/>
+        <moduleRef key="textstructure"/>
+        <moduleRef key="namesdates"/>
+        <moduleRef key="analysis"/>
+        <elementSpec ident="teiHeader" mode="change" module="header">
+          <constraintSpec ident="teiHeaderCheck" scheme="schematron" mode="add">
+            <constraint>
+              <sch:assert test="hcmc:testRNG(.)">ERROR: From RelaxNG, XSLT function.</sch:assert>
+            </constraint>
+          </constraintSpec>
+        </elementSpec>
+        
+        <elementSpec ident="TEI" module="textstructure" mode="change">
+          <!--Note that we add this to att.global since XSLT isn't processed
+            when constraintSpec is a direct child-->
+          <constraintSpec ident="testForErrorDoc" scheme="schematron" mode="add">
+            <constraint>
+              <sch:ns prefix="hcmc" uri="https://hcmc.uvic.ca/ns/1.0"/>
+              <xsl:function 
+                name="hcmc:testRNG">
+                <xsl:param name="el"/>
+                <xsl:sequence 
+                  select="not($el/ancestor::tei:TEI/@xml:id = 'errors')"/>
+              </xsl:function>
+            </constraint>
+          </constraintSpec>
+        </elementSpec>
+        
+        
+      </schemaSpec>
+    </body>
+  </text>
+</TEI>
