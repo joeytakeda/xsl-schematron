@@ -160,7 +160,7 @@
     <xsl:variable name="useVerbose" select="if ($verbose=('True','true','yes','y','verbose','0')) then true() else false()"/>
     
     <xsl:variable name="docs" 
-        select="if (not(jt:noVal($dir))) then uri-collection(resolve-uri($dir, document-uri(/)) || '?select=' || $pattern || ';recurse=' || $recurse || ';on-error=ignore')[not(matches(.,$exclude))] else resolve-uri($file)" as="xs:anyURI*"/>
+        select="if (not(jt:noVal($dir))) then uri-collection(resolve-uri($dir, document-uri(/)) || '?select=' || $pattern || ';recurse=' || $recurse || ';on-error=ignore')[if (normalize-space($exclude) = '') then true() else not(matches(.,$exclude))] else resolve-uri($file)" as="xs:anyURI*"/>
     
    
     
